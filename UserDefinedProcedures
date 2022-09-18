@@ -1,0 +1,68 @@
+You must create your own procedures (user-defined)
+
+1.	Find the name of the Database using parameter @id
+
+ALTER PROCEDURE spGetDatabaseName
+@id int
+AS 
+BEGIN
+SELECT db_name(@id) AS 'Current DB Name' 
+End;
+EXEC spGetDatabaseName @id = '5';
+
+
+2.	Create a stored procedure that returns all officers (first and last names supplied), their precinct, badge, and their status. This procedure does not use any parameters. 
+CREATE PROCEDURE spOfficer_details
+AS BEGIN 
+SELECT first, last, precinct, badge, status
+FROM officers;
+END
+EXEC spOfficer_details;
+
+
+3.	Create a procedure that returns two result sets:
+a.	Top 10 rows showing officer id, his first and last name
+b.	Top 10 rows showing crime id, and its classification.
+
+CREATE PROCEDURE spTop10officers_crimeDetails
+AS BEGIN
+SELECT TOP 10 officer_id, first, last
+FROM officers;
+SELECT TOP 10 crime_id, classification
+FROM crimes;
+END
+EXEC spTop10officers_crimeDetails;
+
+
+4.	 Create a stored procedure that returns information for a specific criminal by passing values for the criminal’s first name and last name. This procedure accepts only exact matches for the parameters passed.
+
+CREATE PROCEDURE spCriminal_Details_Name
+@first NVARCHAR(10), @last NVARCHAR(15)
+AS BEGIN 
+SELECT * FROM criminals
+WHERE first = @first
+AND last = @last;
+END
+EXEC spCriminal_Details_Name @first = 'dave', @last = 'caulk';
+
+
+5.	Create a stored procedure that returns information for criminals by passing full or partial values for the criminal’s first name and last name. This procedure pattern matches the parameters passed or, if not supplied, uses the preset default (last names that start with the letter D).
+
+ALTER PROCEDURE spCriminals_details_defaultname
+	@first NVARCHAR(10) = NULL, 
+	@last NVARCHAR(15) = NULL
+AS  
+BEGIN  
+	IF @first is NULL OR @last is NULL
+	BEGIN
+		SELECT * from criminals
+		WHERE last like 'D%';
+		RETURN
+	END
+	SELECT * from criminals
+	WHERE first like '%' + @first  + '%' 
+	AND last like '%' + @last  + '%' ;
+END  
+--default EXEC returns default last name as “starting with D”
+--all other EXEC commands return different passed parameters (attached screenshots)
+EXEC spCriminals_details_defaultname;
