@@ -1,0 +1,63 @@
+1.	Display code description that has crime code from 302 to 305, display both columns.
+
+CREATE FUNCTION fnCrimeCodesADD(@begin AS int, @end AS int)
+RETURNS TABLE AS
+RETURN(SELECT * FROM crime_codes
+WHERE crime_code BETWEEN @begin AND @end);
+SELECT * FROM fnCrimeCodesADD(302, 305);
+
+
+2.	Display the lowest fine amount charged to a crime. Give the column an alias name “Lowest Fine Amount”
+
+CREATE FUNCTION fnLowestFine()
+RETURNS TABLE AS
+RETURN(SELECT MIN(fine_amount) 
+AS "Lowest Fine Amount" FROM crime_charges);
+
+SELECT * FROM fnLowestFine();
+
+3.	Write a query to return the current date along with time in MS SQL Server.
+CREATE FUNCTION fnCurrentDateTime()
+RETURNS TABLE AS
+RETURN(SELECT CURRENT_TIMESTAMP 
+AS 'System Date and Time');
+
+SELECT * FROM fnCurrentDateTime();
+
+4.	Add 10 days to the pay due date of the crime_charges table then display the result, name the column New_Due_date.
+
+CREATE FUNCTION fnPayDueDateADD(@daytoadd int)
+RETURNS TABLE AS
+RETURN(SELECT pay_due_date, DATEADD(day, @daytoadd, pay_due_date)
+AS New_Due_Date FROM crime_charges);
+
+SELECT * FROM fnPayDueDateADD(10);
+
+
+5.	Display crime id and calculate how many days between filing and hearing dates, name this column “Days to Hearing”
+
+CREATE FUNCTION fnDaysBetweenFileHear()
+RETURNS TABLE AS
+RETURN(SELECT crime_id, DATEDIFF(day, filing_date, hearing_date)
+AS "Days To Hearing" FROM appeals);
+
+SELECT * FROM fnDaysBetweenFileHear();
+
+
+6.	Display officer id along with their last names and the last five characters of their badges. 
+
+CREATE FUNCTION fnOfficerBadgeLastFive()
+RETURNS TABLE AS
+RETURN(SELECT officer_id, last, RIGHT(badge,5) AS last_5_badge
+FROM officers);
+SELECT * FROM fnOfficerBadgeLastFive();
+
+
+7.	Write a query to display the probation officers’ id and their first and last names separated by a comma
+
+CREATE FUNCTION fnProbOfficerIDName()
+RETURNS TABLE AS
+RETURN(SELECT prob_id,CONCAT(first,', ', last)
+AS first_last_name FROM prob_officers);
+
+SELECT * FROM fnProbOfficerIDName();
