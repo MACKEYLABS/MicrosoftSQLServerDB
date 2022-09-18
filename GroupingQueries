@@ -1,0 +1,72 @@
+The city’s Crime Analysis unit has submitted the following data requests. Provide the SQL statements using subqueries to satisfy the requests. Test the statements and show execution results.
+1.	List the name of each officer who has reported more than the average number of crimes officers have reported.	
+
+SELECT co.officer_id, o.first, o.last, COUNT(co.crime_id) AS '#_of_crimes'
+FROM crime_officers co JOIN officers o 
+ON co.officer_id = o.officer_id
+GROUP BY co.officer_id, first, last
+HAVING COUNT(*) > (SELECT COUNT(*) /
+COUNT(DISTINCT officer_id) FROM crime_officers);
+
+
+2.	List the names of all criminals who have committed less than average number of crimes and aren’t listed as violent offenders.
+
+SELECT cr.criminal_id, cr.last, cr.first
+FROM criminals cr JOIN crimes c
+ON c.criminal_id = cr. criminal_id
+WHERE v_status = 'N'
+GROUP BY cr.criminal_id, cr.last, cr.first
+HAVING COUNT(*) < (SELECT COUNT(criminal_id) / 
+COUNT(DISTINCT criminal_id) FROM crimes);
+
+
+3.	List appeal information for each appeal that has a less than average number of days between the filing and hearing dates.
+
+SELECT appeal_id, crime_id, DATEDIFF(day, filing_date, hearing_date) 
+AS days_between_filing_hearding_date, status FROM appeals
+GROUP BY appeal_id, crime_id, filing_date, hearing_date, status
+HAVING AVG(DATEDIFF(day, hearing_date, filing_date)) > 
+(SELECT AVG(DATEDIFF(day, hearing_date, filing_date)) FROM appeals);
+
+
+4.	List the names of probation officers who have had a less than average number of criminals assigned.
+
+SELECT COUNT(po.prob_id) AS 'amt_criminals_assigned', first, last
+FROM prob_officers po JOIN sentences s
+ON s.prob_id = po.prob_id
+GROUP BY first, last
+HAVING COUNT(po.prob_id) < (SELECT COUNT(*) / COUNT(DISTINCT prob_id) FROM sentences);
+
+
+5.	List each crime that has had the highest number of appeals recorded.
+
+SELECT crime_id, MAX(mycount) AS 'max_number_appeals'
+FROM (SELECT crime_id, COUNT(appeal_id)  AS 'mycount'
+FROM appeals 
+GROUP BY crime_id)
+--Because the data size is so small I did not have to use GROUP BY DESC limit
+appeals GROUP BY crime_id;
+
+
+6.	Display code description that has crime code from 302 to 305, display both columns.
+
+SELECT crime_code, code_description
+FROM crime_codes 
+WHERE crime_code BETWEEN '302' AND '305';
+
+
+7.	Add 10 days to the pay due date of the crime_charges table then display the result, name the column New_Due_date.
+SELECT DATEADD(day, 10, pay_due_date) AS New_Due_Date
+FROM crime_charges
+WHERE pay_due_date IS NOT NULL;
+
+8.	Display crime id and calculate how many days between filing and hearing dates, name this column “Days to Hearing”.
+--This one felt easy but I did just as the question asked and used filing_date and hearing_date, I almost   felt like I should have used charged_status in the crimes table the question did not ask this.
+SELECT crime_id, DATEDIFF(day, filing_date, hearing_date) AS 'days_to_hearing'
+FROM appeals;
+
+
+9.	Write a query to display the probation officers’ id and their first and last names separated by a comma.
+
+SELECT prob_id, CONCAT(last, ',') AS 'last',first 
+FROM prob_officers;
