@@ -1,0 +1,98 @@
+The city’s Crimes Analysis unit has submitted the following data requests. Provide the SQL statements to satisfy these requests. Test the statements and show the query results.
+
+1.	Show the average number of crimes reported by an officer.
+
+SELECT COUNT(officer_id) / COUNT(distinct(officer_id)) AS 'avg_crimes_per_officer'
+FROM crime_officers;
+
+
+
+2.	Show the total number of crimes by status.
+
+SELECT COUNT (crime_id) AS status_total, status
+FROM crimes
+GROUP BY status;
+
+
+
+3.	List the highest number of crimes committed by a person.
+
+SELECT TOP 1 criminal_id, COUNT(crime_id) AS most_crimes
+FROM crimes
+GROUP BY criminal_id  
+ORDER BY COUNT(crime_id) DESC;
+
+
+
+4.	Display the lowest fine amount assigned to a crime charge.
+
+SELECT charge_id , fine_amount FROM crime_charges
+WHERE fine_amount = 
+(SELECT min(fine_amount) FROM crime_charges);
+
+
+
+5.	List criminals (ID and name) who have multiple sentences assigned.
+
+SELECT c.criminal_id, first, last, COUNT(sentence_id) AS multiple_sentences
+FROM criminals c, sentences s
+WHERE s.criminal_id = c.criminal_id
+GROUP BY c.criminal_id, last, first
+HAVING COUNT(sentence_id) > 1;
+
+
+6.	List the total number of crime charges successfully defended (guilty status assigned) by precinct. Include only precincts with at least seven guilty charges.
+
+SELECT precinct, COUNT(charge_status) AS "crime_charges_defended"
+FROM crime_charges cc INNER JOIN crime_officers co
+ON cc.crime_id = co.crime_id INNER JOIN  Officers o
+ON co.officer_id = o.officer_id
+WHERE charge_status = 'GL'
+GROUP BY precinct
+HAVING COUNT(charge_status) > 7;
+
+
+
+7.	List the total amount of collections (fines and fees) and the total amount owed by crime classification.
+
+SELECT classification, FORMAT(SUM(COALESCE
+(fine_amount + court_fee,0)),'C') AS total_amt_collections,
+FORMAT(SUM(COALESCE(fine_amount + court_fee - amount_paid,0)),'C') 
+AS total_amt_owed
+FROM  crimes c, crime_charges cc
+Where cc.crime_id = c.crime_id
+GROUP BY classification;
+
+
+
+8.	List the total number of charges by crime classification and charge status. Include a grand total in the results.
+
+SELECT classification, charge_status, 
+COUNT(charge_status) AS total_amt_charges
+FROM crimes c, crime_charges cc
+WHERE cc.crime_id = c.crime_id
+GROUP BY GROUPING SETS
+((classification,charge_status),());
+
+
+
+9.	Perform the same task as in Question #8 and add a subtotal for each charge status. 
+
+SELECT classification, charge_status, 
+COUNT(charge_status) AS total_amt_charges
+FROM crimes c, crime_charges cc
+WHERE cc.crime_id = c.crime_id
+GROUP BY CUBE
+(charge_status,classification);
+
+
+
+10.	Perform the same task as in Question #8 and add a subtotal by each crime classification. 
+
+SELECT classification, charge_status, 
+COUNT(charge_status) AS total_amt_charges
+FROM crimes c, crime_charges cc
+WHERE cc.crime_id = c.crime_id
+GROUP BY ROLLUP
+(classification,charge_status);
+
