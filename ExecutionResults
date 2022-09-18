@@ -1,0 +1,58 @@
+The following list reflects current data requests from city managers. Provide the SQL statement to satisfy each request. Test the statements and show execution results.
+1.	List the following information for all crimes that have a period greater than 14 days between the date charged and the hearing date: crime ID, classification, date charged, hearing date, and number of days between the date charged and the hearing date.
+
+SELECT crime_id, classification, date_charged, hearing_date, 
+DATEDIFF(day, date_charged, hearing_date) AS before_trial
+FROM crimes
+WHERE hearing_date IS NOT NULL
+AND DATEDIFF(day, date_charged, hearing_date) > 14;
+
+
+2.	Produce a list showing each active police officer and his or her community assignment, indicated by the second letter of the precinct code. Display the community description listed in the following chart, based on the second letter of the precinct code.
+Second Letter of Precinct Code	Description
+A	Shady Grove
+B	Center City
+C	Bay Landing
+
+SELECT CONCAT(first, ' ', last) AS name,
+CASE
+WHEN SUBSTRING(precinct, 2, 1) = 'A' THEN 'Shady Grove'
+WHEN SUBSTRING(precinct, 2, 1) = 'B' THEN 'Center City' 
+WHEN SUBSTRING(precinct, 2, 1) = 'C' THEN 'Bay Landing' 
+ELSE 'No Community Assignment'
+END description
+FROM officers
+WHERE status = 'A';
+
+
+
+3.	Produce a list of sentencing information to include criminal ID, name (displayed in all uppercase letters), sentence ID, sentence start date, and length in months of the sentence. The number of months should be shown as a whole number. The start date should be displayed in the format “December 17, 2009.”
+
+SELECT c.criminal_id, UPPER(CONCAT(first, ' ', last)) AS name, sentence_id, 
+FORMAT(start_date, 'MMMM d, yyyy') AS start_date,
+DATEDIFF(month, start_date, end_date) AS sentence_length
+FROM sentences s, criminals c
+WHERE s.criminal_id = c.criminal_id;
+
+
+4.	A list of all amounts owed is needed. Create a list showing each criminal name, charge ID, total amount owed (fine amount plus court fee), amount paid, amount owed, and payment due date. If nothing has been paid to date, the amount paid is NULL. Include only criminals who owe some amount of money. Display the dollar amounts with a dollar sign and two decimals.
+
+SELECT CONCAT(first, ' ',last) AS name, charge_id, 
+FORMAT(fine_amount + court_fee,'C') AS total_amount_owed,
+FORMAT(ISNULL(amount_paid,0),'C') AS amount_paid,
+FORMAT(ISNULL(((fine_amount - court_fee) - amount_paid),0),'C')
+AS amount_owed, pay_due_date
+FROM crime_charges cc
+JOIN crimes  c ON cc.crime_id = c.crime_id
+JOIN criminals cr ON c.criminal_id = cr.criminal_id
+WHERE ((cc.fine_amount + cc.court_fee) - ISNULL(cc.amount_paid,0)) > 0;
+
+ 
+5.	Display the criminal name and probation start date for all criminals who have a probation period greater than two months. Also, display the date that’s two months from the beginning of the probation period, which will serve as a review date.
+
+SELECT CONCAT(first,' ',last) AS name, start_date,
+DATEADD(month, 2, start_date) AS review_date
+FROM sentences s JOIN criminals c
+ON s.criminal_id = c.criminal_id
+WHERE type = 'P'
+AND DATEDIFF(month,start_date,end_date) > 2;
